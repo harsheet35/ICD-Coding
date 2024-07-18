@@ -1,1 +1,4 @@
 /data
+
+# .env file
+.env
