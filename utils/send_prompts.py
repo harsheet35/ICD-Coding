@@ -40,9 +40,9 @@ def get_icd_codes_from_gpt(data: pd.DataFrame, result_file_path: str, candidate_
 
 
 
-def get_icd_codes_from_gpt_se(data: pd.DataFrame, result_file_path: str) -> None:
-    
-    data.reset_index()
+def get_icd_codes_from_gpt_se(data: pd.DataFrame, result_file_path: str, header: bool) -> None:
+    print('chunk 1st index =', data.index[0])
+    data = data.reset_index().drop(columns=['index'], axis=1)
     # print("FUnction called")
     results, _ = process_notes_se(data=data, test_rows=len(data))
 
@@ -53,7 +53,7 @@ def get_icd_codes_from_gpt_se(data: pd.DataFrame, result_file_path: str) -> None
     
     res_df = pd.DataFrame(dic_top_50)
 
-    res_df.to_csv(result_file_path, mode='a', index=False, header=True)
+    res_df.to_csv(result_file_path, mode='a', index=False, header=header)
 
 
 def process_dataframe_in_chunks(dataframe: pd.DataFrame, chunk: int, candidate_list: str, result_file_path: str, ICD_codes: List):
@@ -96,17 +96,23 @@ def load_and_process_dataframe_in_chunks(file_path:str,chunksize:int, candidate_
             break
         
     
-def process_dataframe_in_chunks_se(dataframe: pd.DataFrame, chunk: int, candidate_list: str, result_file_path: str, ICD_codes: List):
+def process_dataframe_in_chunks_se(dataframe: pd.DataFrame, chunk: int, result_file_path: str):
     
+    header_written = False
     for i in range(chunk):
         start_idx = i * chunk
         end_idx = min(start_idx + chunk, len(dataframe))
+        if start_idx >= end_idx:
+            print("start index: ", start_idx, "end index: ", end_idx)
+            return
         data = dataframe.iloc[start_idx:end_idx]
+        
         print("Processing from start index", start_idx)
         print("\nProcessing from end Index", end_idx)
         print("\n---------------------------------------------------------------\n")
         try:
-            get_icd_codes_from_gpt_se(data=data, result_file_path=result_file_path)
+            get_icd_codes_from_gpt_se(data=data, result_file_path=result_file_path, header=not header_written)
+            header_written = True
         except Exception as e:
-            print(e)
+            print('Error:\n', e)
             break

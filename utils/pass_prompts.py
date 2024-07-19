@@ -265,13 +265,16 @@ def process_notes(data, candidate_list = candidate_list, model="gpt-3.5-turbo", 
 
 
 def process_notes_se(data, model="gpt-3.5-turbo", max_tokens=4096, test_rows=4):
-    print('Subject ID:', data.iloc[0,0])
+    # data.reset_index()
+    print('Shape:', data.shape)
+    # print(data.head())
     results = []
     total_tokens = 0
     # print(data.head(1))
     for index, row in data.iterrows():
         print(index)
         if index > test_rows:
+            print(f'index({index}) > test_rows({test_rows})')
             break
         
         note = row['TEXT']
