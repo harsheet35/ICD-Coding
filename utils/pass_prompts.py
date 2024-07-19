@@ -130,7 +130,7 @@ candidate_list = """
 candidate_dict = {}
 
 for line in candidate_list.strip().split('\n'):
-    code, description = line.split('-')
+    code, description = line.split(' - ')
     candidate_dict[code] = description
 
 
@@ -140,7 +140,7 @@ def prepare_prompt_se(note, candidates):
 
     candidates = eval(candidates)
 
-    results = [(candidate, description[candidate]) for candidate in candidate_dict.keys()]
+    results = [(candidate, candidate_dict[candidate]) for candidate in candidate_dict.keys()]
 
     return f"""
     As a proficient clinical coding profes-
@@ -156,8 +156,9 @@ def prepare_prompt_se(note, candidates):
     ICD 9 CANDIDATE codes and descriptions: {results}.
     —
     Here is the CLINICAL NOTE split by sentence,
-    each sentence starts with an index number surrounded
-    by parentheses: {note}
+    : {note}
+
+    
     —
     When assigning ICD code, you should:
     1. Carefully assign ICD code to each sentence as
@@ -171,6 +172,12 @@ def prepare_prompt_se(note, candidates):
     nia”;
     4. Include ICD code only, not the associated En-
     glish description.
+
+
+    you need to return the output format as a list of tuple 
+    containing the sentence that lead to that ICD code and the ICD code
+    like this [(Sentence1, ICD_CODE1), (Sentence2, ICD_CODE1), (Sentence2, ICD_CODE2)].
+    Give only the output and not anything extra
     """
 
 
