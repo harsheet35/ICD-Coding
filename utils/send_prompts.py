@@ -1,6 +1,6 @@
 
 from utils.MultilabelEncoding import MultiLabel_Encoding
-from utils.pass_prompts import process_notes
+from utils.pass_prompts import process_notes, process_notes_se
 import pandas as pd
 from typing import List
 
@@ -35,6 +35,23 @@ def get_icd_codes_from_gpt(data: pd.DataFrame, result_file_path: str, candidate_
     icd_encoding = MultiLabel_Encoding(all_labels=all_icd_codes)
 
     icd_encoding.add_transform(df=res_df, target_column='ICD9_CODE', end_point_column='encoded_ICD9_CODES')
+
+    res_df.to_csv(result_file_path, mode='a', index=False, header=True)
+
+
+
+def get_icd_codes_from_gpt_se(data: pd.DataFrame, result_file_path: str) -> None:
+    
+    data.reset_index()
+    # print("FUnction called")
+    results, _ = process_notes_se(data=data, test_rows=len(data))
+
+    dic_top_50 ={'SUBJECT_ID': [res[0] for res in results],
+             'HADM_ID': [res[1] for res in results],
+             'TEXT': [res[2] for res in results],
+             'Sentence_level_evidence': [res[3] for res in results]}
+    
+    res_df = pd.DataFrame(dic_top_50)
 
     res_df.to_csv(result_file_path, mode='a', index=False, header=True)
 
@@ -79,3 +96,17 @@ def load_and_process_dataframe_in_chunks(file_path:str,chunksize:int, candidate_
             break
         
     
+def process_dataframe_in_chunks_se(dataframe: pd.DataFrame, chunk: int, candidate_list: str, result_file_path: str, ICD_codes: List):
+    
+    for i in range(chunk):
+        start_idx = i * chunk
+        end_idx = min(start_idx + chunk, len(dataframe))
+        data = dataframe.iloc[start_idx:end_idx]
+        print("Processing from start index", start_idx)
+        print("\nProcessing from end Index", end_idx)
+        print("\n---------------------------------------------------------------\n")
+        try:
+            get_icd_codes_from_gpt_se(data=data, result_file_path=result_file_path)
+        except Exception as e:
+            print(e)
+            break
